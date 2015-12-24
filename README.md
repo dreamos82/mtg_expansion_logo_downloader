@@ -1,3 +1,11 @@
+About
+-----
+
+This script downloads Magic The Gathering expansion symbols images (if available) from mtgsalvation.gamepedia.com and store them into a folder,  creating an xml file with the following information:
+
+* Expansion Name
+* Expansion Image (in the form of relative path)
+
 Prerequisites
 -------------
 
