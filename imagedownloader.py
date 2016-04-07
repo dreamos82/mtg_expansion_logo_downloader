@@ -12,8 +12,9 @@ url = url_prefix + '/Template:List_of_Magic_sets'
 user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/45.0.2454.101 Chrome/45.0.2454.101 Safari/537.36'
 headers={'User-Agent':user_agent,}
 xml_root = ET.Element('root')
-elementValuesAsAttributes = False;
+elementValuesAsAttributes = False
 project_folder_name = 'project' + str(int(time.time()))
+add_extension_short_name = False
 
 
 def indent(elem, level=0):
@@ -56,6 +57,7 @@ def parse_page( folder_name, local_url):
 		data = response.read();
 		target_page = BeautifulSoup(data, 'html.parser')
 		image_container = target_page.find("div", {"class" : "fullMedia"})
+		print(image_container + "===")
 		if image_container:
 			link = image_container.find('a')
 			print(link.get('href'))
@@ -65,6 +67,7 @@ def parse_page( folder_name, local_url):
 	return
 	
 def download_images( folder_name, image_url, title ):
+	print(folder_name + " - " + image_url);
 	urllib.request.urlretrieve(image_url, folder_name + "/" + title)
 	
 def createElement( element_type, element_value, parent):
@@ -84,13 +87,38 @@ if not os.path.exists(project_folder_name):
 	os.makedirs(project_folder_name)
 table = soup.find("table", {"class" : "wikitable"})	
 for tr in table.find_all('tr'):
+	td_list = tr.find_all('td')
 	edition_element = ET.Element('edition')
-	link = tr.find('a', {"class" : "image"})
-	if link is not None:
-		print(link.get('href'))
-		image_name = project_folder_name + '/' + link.get('href').replace('File:', '')
-		createElement('image', image_name, edition_element)
-		parse_page(project_folder_name, link.get('href')) 
+	if(len(td_list) > 0):
+		launch_date = td_list[0].text.replace(" ", "")
+		print(launch_date)
+		createElement('launch', launch_date, edition_element)
+		set_code = td_list[3].text
+		print(set_code)
+		createElement('code', set_code, edition_element)
+		link = td_list[2].find('img')
+		if(link is not None):
+			uri = link.get('src')
+			uri = uri.split('?')[0]
+			uri_array = uri.split('/');
+			print(uri + " - " + str(len(uri_array)))
+			img_name = ""
+			if(len(uri_array) == 7):
+				img_name = uri_array[6]
+				print(uri_array[6])
+			elif(len(uri_array) == 9):
+				img_name = uri_array[7]
+				print(uri_array[8] + " - " + uri_array[7])
+			image_name = project_folder_name + '/' + img_name
+			createElement('image', image_name, edition_element)
+			download_images(project_folder_name,uri, img_name)
+	#TODO replace a with img
+	#link = tr.find('a', {"class" : "image"})
+	#if link is not None:
+	#	print(link.get('href'))
+	#	image_name = project_folder_name + '/' + link.get('href').replace('File:', '')
+	#	createElement('image', image_name, edition_element)
+	#	parse_page(project_folder_name, link.get('href')) 
 	name_element = tr.find('i')
 	if name_element is not None:
 		anchor_name = name_element.find('a')
